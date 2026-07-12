@@ -100,3 +100,4 @@ dp.create_auto_cdc_flow(
 
 # MAGIC %sql
 # MAGIC select * from databricksproject_ws.`02_silver`.dim_restaurants;
+
