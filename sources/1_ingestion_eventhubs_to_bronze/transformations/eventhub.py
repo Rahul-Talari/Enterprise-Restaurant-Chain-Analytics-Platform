@@ -1,26 +1,26 @@
 from pyspark.sql.functions import col, from_json
 from pyspark import pipelines as dp
 
-schema = """
-order_id STRING,
-timestamp TIMESTAMP,
-restaurant_id STRING,
-customer_id STRING,
-order_type STRING,
-items ARRAY<STRUCT<item_id STRING, name STRING, category STRING, quantity INTEGER, unit_price DOUBLE, subtotal DOUBLE>>,
-total_amount DOUBLE,
-payment_method STRING,
-order_status STRING,
-created_at TIMESTAMP
+schema="""
+order_id STRING, 
+order_timestamp TIMESTAMP, 
+restaurant_id STRING, 
+customer_id STRING, 
+order_type STRING, 
+items ARRAY<STRUCT<item_id STRING, name STRING, category STRING, quantity INTEGER, unit_price DOUBLE, subtotal DOUBLE>>, 
+total_amount DOUBLE, 
+payment_method STRING, 
+order_status STRING, 
+last_updated TIMESTAMP
 """
 
 @dp.table(name="orders", table_properties={"quality": "bronze"})
 def orders():
 
   # Event Hubs configuration — read inside function to comply with Serverless spark.conf restrictions
-  EH_NAMESPACE = spark.conf.get("eh.namespace")
-  EH_NAME      = spark.conf.get("eh.name")
-  EH_CONN_STR  = spark.conf.get("eh.connectionstring")
+  EH_NAMESPACE = dbutils.secrets.get(scope='restaurantproject', key='EVENTHUB_NAMESPACE') 	
+  EH_NAME      = dbutils.secrets.get(scope='restaurantproject', key='EVENTHUB_NAME') 	
+  EH_CONN_STR  = dbutils.secrets.get(scope='restaurantproject', key='EVENTHUB_CONN_STR') 	
 
   # Kafka Consumer configuration
   KAFKA_OPTIONS = {
