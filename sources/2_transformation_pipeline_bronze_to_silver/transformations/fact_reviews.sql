@@ -1,4 +1,4 @@
-CREATE OR REFRESH STREAMING TABLE ws_restaurant_dbxproject.`02_silver`.fact_reviews(
+CREATE OR REFRESH STREAMING TABLE databricksproject_ws.`02_silver`.fact_reviews(
     CONSTRAINT valid_sentiment EXPECT(sentiment IN ('positive','neutral','negative')) ON VIOLATION DROP ROW,
     CONSTRAINT valid_rating EXPECT(rating>0) ON VIOLATION DROP ROW
 )
@@ -27,7 +27,7 @@ from_json(
     ),
     'STRUCT<sentiment:STRING, issue_delivery:BOOLEAN, issue_delivery_reason:STRING, issue_food_quality:BOOLEAN, issue_food_quality_reason:STRING, issue_pricing:BOOLEAN, issue_pricing_reason:STRING, issue_portion_size:BOOLEAN, issue_portion_size_reason:STRING>'
 ) AS analysis_json
-from STREAM(ws_restaurant_dbxproject.`01_bronze`.reviews)
+from STREAM(databricksproject_ws.`01_bronze`.reviews)
 )
 select
     review_timestamp,
