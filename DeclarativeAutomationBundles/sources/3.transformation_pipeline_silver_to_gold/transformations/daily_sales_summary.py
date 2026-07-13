@@ -11,7 +11,7 @@ from pyspark.sql.types import DecimalType
 def d_sales_summary():
 
     return (
-        dp.read("02_silver.fact_orders")
+        spark.read.table("02_silver.fact_orders")
             .groupBy("order_date")
             .agg(
                 countDistinct("order_id").alias("total_orders"),
