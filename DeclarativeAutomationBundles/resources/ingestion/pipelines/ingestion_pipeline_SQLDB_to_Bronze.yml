@@ -1,0 +1,101 @@
+resources:
+  pipelines:
+    ingestion_pipeline_sqldb_to_bronze:
+      name: ingestion_pipeline_sqldb_to_bronze
+
+      catalog: ${var.catalog}
+      schema: ${var.bronze_schema}
+
+      serverless: true
+      max_concurrent_runs: 4
+
+      ingestion_definition:
+        connection_name: ${var.sql_connection}
+
+        objects:
+
+          - table:
+              source_catalog: ${var.source_catalog}
+              source_schema: ${var.source_schema}
+              source_table: customers
+
+              destination_catalog: ${var.catalog}
+              destination_schema: ${var.bronze_schema}
+              destination_table: customers
+
+              table_configuration:
+                primary_keys:
+                  - customer_id
+
+                query_based_connector_config:
+                  cursor_columns:
+                    - last_updated
+
+          - table:
+              source_catalog: ${var.source_catalog}
+              source_schema: ${var.source_schema}
+              source_table: restaurants
+
+              destination_catalog: ${var.catalog}
+              destination_schema: ${var.bronze_schema}
+              destination_table: restaurants
+
+              table_configuration:
+                primary_keys:
+                  - restaurant_id
+
+                query_based_connector_config:
+                  cursor_columns:
+                    - last_updated
+
+          - table:
+              source_catalog: ${var.source_catalog}
+              source_schema: ${var.source_schema}
+              source_table: menu_items
+
+              destination_catalog: ${var.catalog}
+              destination_schema: ${var.bronze_schema}
+              destination_table: menu_items
+
+              table_configuration:
+                primary_keys:
+                  - restaurant_id
+                  - item_id
+
+                query_based_connector_config:
+                  cursor_columns:
+                    - last_updated
+
+          - table:
+              source_catalog: ${var.source_catalog}
+              source_schema: ${var.source_schema}
+              source_table: historical_orders
+
+              destination_catalog: ${var.catalog}
+              destination_schema: ${var.bronze_schema}
+              destination_table: historical_orders
+
+              table_configuration:
+                primary_keys:
+                  - order_id
+
+                query_based_connector_config:
+                  cursor_columns:
+                    - last_updated
+
+          - table:
+              source_catalog: ${var.source_catalog}
+              source_schema: ${var.source_schema}
+              source_table: reviews
+
+              destination_catalog: ${var.catalog}
+              destination_schema: ${var.bronze_schema}
+              destination_table: reviews
+
+              table_configuration:
+                primary_keys:
+                  - review_id
+
+                query_based_connector_config:
+                  cursor_columns:
+                    - last_updated

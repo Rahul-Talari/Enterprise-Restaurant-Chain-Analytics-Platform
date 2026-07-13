@@ -1,0 +1,67 @@
+bundle:
+  name: restaurant_chain_analytics
+
+include:
+  - resources/ingestion/**/*.yml
+  - resources/transformation/**/*.yml
+  - resources/orchestration/**/*.yml
+  - config/**/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog
+    default: databricksproject_ws
+
+  bronze_schema:
+    description: Bronze schema
+    default: 01_bronze
+
+  silver_schema:
+    description: Silver schema
+    default: 02_silver
+
+  gold_schema:
+    description: Gold schema
+    default: 03_gold
+
+  failure_email:
+    description: Failure notification email
+    default: talarirahulamnaidatta@gmail.com
+
+  secret_scope:
+    description: Secret scope
+    default: restaurantproject
+
+  sql_connection:
+    description: Azure SQL UC Connection
+    default: conn_restaurantops
+
+  source_catalog:
+    description: Source SQL Database
+    default: restaurantops
+
+  source_schema:
+    description: Source SQL Schema
+    default: dbo
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+    workspace:
+      host: https://adb-7405609208650840.0.azuredatabricks.net
+      profile: DEFAULT
+
+    variables:
+      catalog: databricksproject_ws
+
+  prod:
+    mode: production
+
+    workspace:
+      host: https://adb-7405609208650840.0.azuredatabricks.net
+      profile: DEFAULT
+
+    variables:
+      catalog: databricksproject_ws_prod

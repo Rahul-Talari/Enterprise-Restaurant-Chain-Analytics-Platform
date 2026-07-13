@@ -1,0 +1,8 @@
+variables:
+  compute_mode:
+    description: Development compute mode
+    default: serverless
+
+  serverless_enabled:
+    description: Whether the development environment uses serverless compute
+    default: true

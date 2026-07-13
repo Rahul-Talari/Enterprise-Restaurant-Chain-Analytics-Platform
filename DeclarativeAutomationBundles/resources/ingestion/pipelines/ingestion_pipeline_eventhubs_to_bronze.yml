@@ -1,0 +1,18 @@
+resources:
+  pipelines:
+    ingestion_pipeline_eventhubs_to_bronze:
+      name: ingestion_pipeline_eventhubs_to_bronze
+
+      catalog: ${var.catalog}
+      schema: ${var.bronze_schema}
+
+      serverless: true
+      continuous: true
+      max_concurrent_runs: 4
+
+      configuration:
+        secret_scope: ${var.secret_scope}
+
+      libraries:
+        - file:
+            path: ../../sources/1_ingestion_eventhubs_to_bronze/transformations/eventhub.py

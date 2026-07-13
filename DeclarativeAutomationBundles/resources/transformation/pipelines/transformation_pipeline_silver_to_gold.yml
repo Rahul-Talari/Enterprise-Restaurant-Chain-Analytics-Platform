@@ -1,0 +1,17 @@
+resources:
+  pipelines:
+    transformation_pipeline_silver_to_gold:
+      name: transformation_pipeline_silver_to_gold
+
+      catalog: ${var.catalog}
+      schema: ${var.gold_schema}
+
+      serverless: true
+
+      libraries:
+        - file:
+            path: ../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_customer_360.py
+        - file:
+            path: ../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_restaurant_reviews.py
+        - file:
+            path: ../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_sales_summary.py

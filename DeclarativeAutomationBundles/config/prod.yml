@@ -1,0 +1,8 @@
+variables:
+  compute_mode:
+    description: Production compute mode
+    default: serverless
+
+  serverless_enabled:
+    description: Whether the production environment uses serverless compute
+    default: true

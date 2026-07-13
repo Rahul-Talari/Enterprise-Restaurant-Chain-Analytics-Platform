@@ -1,0 +1,20 @@
+resources:
+  pipelines:
+    transformation_pipeline_bronze_to_silver:
+      name: transformation_pipeline_bronze_to_silver
+
+      catalog: ${var.catalog}
+      schema: ${var.silver_schema}
+
+      serverless: true
+      continuous: true
+
+      libraries:
+        - file:
+            path: ../../sources/2_transformation_pipeline_bronze_to_silver/transformations/dimensional_tables.py
+        - file:
+            path: ../../sources/2_transformation_pipeline_bronze_to_silver/transformations/fact_orders.py
+        - file:
+            path: ../../sources/2_transformation_pipeline_bronze_to_silver/transformations/fact_order_items.py
+        - file:
+            path: ../../sources/2_transformation_pipeline_bronze_to_silver/transformations/fact_reviews.sql

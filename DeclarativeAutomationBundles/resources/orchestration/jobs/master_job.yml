@@ -1,0 +1,36 @@
+resources:
+  jobs:
+    master_job:
+      name: master_job
+      max_concurrent_runs: 4
+
+      email_notifications:
+        on_failure:
+          - ${var.failure_email}
+
+      schedule:
+        quartz_cron_expression: "0 0 * * * ?"
+        timezone_id: UTC
+        pause_status: UNPAUSED
+
+      tasks:
+        - task_key: ingestion_sql_to_bronze
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.ingestion_pipeline_sqldb_to_bronze.id}
+
+        - task_key: ingestion_eventhub_to_bronze
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.ingestion_pipeline_eventhubs_to_bronze.id}
+
+        - task_key: bronze_to_silver
+          depends_on:
+            - task_key: ingestion_sql_to_bronze
+            - task_key: ingestion_eventhub_to_bronze
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.transformation_pipeline_bronze_to_silver.id}
+
+        - task_key: silver_to_gold
+          depends_on:
+            - task_key: bronze_to_silver
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.transformation_pipeline_silver_to_gold.id}
