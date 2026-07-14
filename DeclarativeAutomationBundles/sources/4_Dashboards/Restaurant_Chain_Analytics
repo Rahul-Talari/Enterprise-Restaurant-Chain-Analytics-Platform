@@ -1,0 +1,2126 @@
+{
+  "datasets": [
+    {
+      "name": "de775910",
+      "displayName": "d_sales_summary",
+      "queryLines": [
+        "select\r\n",
+        "  *\r\n",
+        "from\r\n",
+        "  databricksproject_ws.`03_gold`.d_sales_summary\r\n",
+        "WHERE\r\n",
+        "  order_date between :DATE_RANGE.min AND :DATE_RANGE.max;"
+      ],
+      "parameters": [
+        {
+          "displayName": "DATE_RANGE",
+          "keyword": "DATE_RANGE",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {
+            "range": {
+              "dataType": "DATE",
+              "min": {
+                "value": "2026-07-01T00:00:00.000"
+              },
+              "max": {
+                "value": "2026-07-14T00:00:00.000"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6dbf5aec",
+      "displayName": "fact_orders",
+      "queryLines": [
+        "select * from databricksproject_ws.`02_silver`.fact_orders\r\n",
+        "where order_date between :DATE_RANGE.min and :DATE_RANGE.max;"
+      ],
+      "parameters": [
+        {
+          "displayName": "DATE_RANGE",
+          "keyword": "DATE_RANGE",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {
+            "range": {
+              "dataType": "DATE",
+              "min": {
+                "value": "2026-06-01T00:00:00.000"
+              },
+              "max": {
+                "value": "2026-07-14T00:00:00.000"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "95501730",
+      "displayName": "dim_customers",
+      "queryLines": [
+        "select\n",
+        "  *\n",
+        "from\n",
+        "  databricksproject_ws.`02_silver`.dim_customers\n",
+        "where\n",
+        "  join_date <= :DATE_RANGE.max;"
+      ],
+      "parameters": [
+        {
+          "displayName": "DATE_RANGE",
+          "keyword": "DATE_RANGE",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {
+            "operator": {
+              "operator": "AND"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "newly_joined_customers",
+      "displayName": "Newly Joined Customers",
+      "queryLines": [
+        "select\n",
+        "  *\n",
+        "from\n",
+        "  databricksproject_ws.`02_silver`.dim_customers\n",
+        "where\n",
+        "  join_date between :DATE_RANGE.min and :DATE_RANGE.max;"
+      ],
+      "parameters": [
+        {
+          "displayName": "Date Range",
+          "keyword": "DATE_RANGE",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {
+            "range": {
+              "dataType": "DATE",
+              "min": {
+                "value": "2026-06-23"
+              },
+              "max": {
+                "value": "2026-07-13"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "f21af48f",
+      "displayName": "Top Ten Most Popular Menu Selections Summary",
+      "queryLines": [
+        "with top10 as (\r\n",
+        "select item_id, sum(quantity) as total_quantity from databricksproject_ws.`02_silver`.fact_order_items\r\n",
+        "where order_timestamp between :DATE_RANGE.min and :DATE_RANGE.max\r\n",
+        "group by item_id\r\n",
+        "sort by sum(quantity) desc\r\n",
+        "limit 10\r\n",
+        ")\r\n",
+        "\r\n",
+        "select menu_items.name, top10.total_quantity from top10\r\n",
+        "left join databricksproject_ws.`02_silver`.dim_menu_items menu_items\r\n",
+        "on top10.item_id==menu_items.item_id;\r\n"
+      ],
+      "parameters": [
+        {
+          "displayName": "DATE_RANGE",
+          "keyword": "DATE_RANGE",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {
+            "range": {
+              "dataType": "DATE",
+              "min": {
+                "value": "2026-07-01T00:00:00.000"
+              },
+              "max": {
+                "value": "2026-07-14T00:00:00.000"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "f2f6f48f",
+      "displayName": "Revenue by Food Category",
+      "queryLines": [
+        "SELECT\r\n",
+        "  mi.category AS food_category,\r\n",
+        "  SUM(foi.subtotal) AS revenue\r\n",
+        "FROM databricksproject_ws.`02_silver`.fact_order_items foi\r\n",
+        "INNER JOIN databricksproject_ws.`02_silver`.dim_menu_items mi\r\n",
+        "  ON foi.item_id = mi.item_id\r\n",
+        " AND foi.restaurant_id = mi.restaurant_id\r\n",
+        "WHERE foi.order_timestamp BETWEEN :DATE_RANGE.min AND :DATE_RANGE.max\r\n",
+        "GROUP BY mi.category\r\n",
+        "ORDER BY revenue DESC;"
+      ],
+      "parameters": [
+        {
+          "displayName": "DATE_RANGE",
+          "keyword": "DATE_RANGE",
+          "dataType": "DATE",
+          "complexType": "RANGE",
+          "defaultSelection": {
+            "range": {
+              "dataType": "DATE",
+              "min": {
+                "value": "now-30d/d"
+              },
+              "max": {
+                "value": "now/d"
+              }
+            }
+          }
+        }
+      ],
+      "catalog": "databricksproject_ws",
+      "schema": "02_silver"
+    },
+    {
+      "name": "1c0d9925",
+      "displayName": "Restaurant_reviews",
+      "queryLines": [
+        "select * from databricksproject_ws.`03_gold`.d_restaurant_reviews;"
+      ]
+    },
+    {
+      "name": "460a360b",
+      "displayName": "Review Trend",
+      "queryLines": [
+        "select \r\n",
+        "  date(reviews.review_timestamp) as review_date,\r\n",
+        "  restaurants.name as restaurant_name,\r\n",
+        "  COUNT(DISTINCT CASE WHEN sentiment='positive' then order_id else null end) positive_review_ct,\r\n",
+        "  COUNT(DISTINCT CASE WHEN sentiment='negative' then order_id else null end) negative_review_ct,\r\n",
+        "  COUNT(DISTINCT CASE WHEN sentiment='neutral' then order_id else null end) neutral_review_ct\r\n",
+        "from databricksproject_ws.`02_silver`.fact_reviews reviews\r\n",
+        "inner join databricksproject_ws.`02_silver`.dim_restaurants restaurants\r\n",
+        "on reviews.restaurant_id = restaurants.restaurant_id\r\n",
+        "GROUP BY review_date, restaurant_name\r\n",
+        "ORDER BY review_date, restaurant_name;\r\n"
+      ]
+    },
+    {
+      "name": "eee99837",
+      "displayName": "Reviews Distribution",
+      "queryLines": [
+        "select restaurant_name,\r\n",
+        "       '5 star' as rating_label, rating_5_count as rating_count\r\n",
+        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "union all\r\n",
+        "select restaurant_name,\r\n",
+        "       '4 star' as rating_label, rating_4_count as rating_count\r\n",
+        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "union all\r\n",
+        "select restaurant_name,\r\n",
+        "       '3 star' as rating_label, rating_3_count as rating_count\r\n",
+        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "union all\r\n",
+        "select restaurant_name,\r\n",
+        "       '2 star' as rating_label, rating_2_count as rating_count\r\n",
+        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "union all\r\n",
+        "select restaurant_name,\r\n",
+        "       '1 star' as rating_label, rating_1_count as rating_count\r\n",
+        "from databricksproject_ws.`03_gold`.d_restaurant_reviews"
+      ]
+    },
+    {
+      "name": "22ad71a2",
+      "displayName": "Issue_categorization",
+      "queryLines": [
+        "select \r\n",
+        "  restaurant.name as restaurant,\r\n",
+        "  count(distinct case when review.issue_delivery = true then review.order_id else null end) as issue_delivery_ct,\r\n",
+        "  count(distinct case when review.issue_food_quality = true then review.order_id else null end) as issue_food_quality_ct,\r\n",
+        "  count(distinct case when review.issue_pricing = true then review.order_id else null end) as issue_pricing_ct,\r\n",
+        "  count(distinct case when review.issue_portion_size = true then review.order_id else null end) as issue_portion_size_ct\r\n",
+        "from databricksproject_ws.02_silver.fact_reviews review\r\n",
+        "join databricksproject_ws.02_silver.dim_restaurants restaurant\r\n",
+        "  on review.restaurant_id = restaurant.restaurant_id\r\n",
+        "where restaurant.__END_AT is null\r\n",
+        "group by restaurant.name;"
+      ]
+    },
+    {
+      "name": "b6e153b6",
+      "displayName": "positive reviews",
+      "queryLines": [
+        "-- positive reviews latest\r\n",
+        "SELECT\r\n",
+        "  reviews.review_text AS review,\r\n",
+        "  rest.name AS restaurant,\r\n",
+        "  reviews.review_timestamp AS timestamp\r\n",
+        "FROM databricksproject_ws.`02_silver`.fact_reviews reviews\r\n",
+        "JOIN databricksproject_ws.`02_silver`.dim_restaurants rest\r\n",
+        "  ON reviews.restaurant_id = rest.restaurant_id\r\n",
+        "WHERE reviews.sentiment = 'positive'\r\n",
+        "  AND reviews.review_text IS NOT NULL\r\n",
+        "ORDER BY reviews.review_timestamp DESC;"
+      ],
+      "catalog": "databricksproject_ws",
+      "schema": "02_silver"
+    },
+    {
+      "name": "52e0410e",
+      "displayName": "negative reviews",
+      "queryLines": [
+        "-- positive reviews latest\r\n",
+        "SELECT\r\n",
+        "  reviews.review_text AS review,\r\n",
+        "  rest.name AS restaurant,\r\n",
+        "  reviews.review_timestamp AS timestamp\r\n",
+        "FROM databricksproject_ws.`02_silver`.fact_reviews reviews\r\n",
+        "JOIN databricksproject_ws.`02_silver`.dim_restaurants rest\r\n",
+        "  ON reviews.restaurant_id = rest.restaurant_id\r\n",
+        "WHERE reviews.sentiment = 'negative'\r\n",
+        "  AND reviews.review_text IS NOT NULL\r\n",
+        "ORDER BY reviews.review_timestamp DESC;"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "ded3febc",
+      "displayName": "Chain Performance Insights",
+      "layout": [
+        {
+          "widget": {
+            "name": "total-orders",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "de775910",
+                  "fields": [
+                    {
+                      "name": "total_orders",
+                      "expression": "`total_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Orders"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_orders"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "date-range",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f34af26183f9ce13cca92dbc198_DATE_RANGE",
+                "query": {
+                  "datasetName": "de775910",
+                  "parameters": [
+                    {
+                      "name": "DATE_RANGE",
+                      "keyword": "DATE_RANGE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f37032f1bb2b90fbf2ba03da350_DATE_RANGE",
+                "query": {
+                  "datasetName": "6dbf5aec",
+                  "parameters": [
+                    {
+                      "name": "DATE_RANGE",
+                      "keyword": "DATE_RANGE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f3b362f16dc86210433795f9d5a_DATE_RANGE",
+                "query": {
+                  "datasetName": "95501730",
+                  "parameters": [
+                    {
+                      "name": "DATE_RANGE",
+                      "keyword": "DATE_RANGE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f3cd4c017d2bc84eded797063dc_DATE_RANGE",
+                "query": {
+                  "datasetName": "newly_joined_customers",
+                  "parameters": [
+                    {
+                      "name": "DATE_RANGE",
+                      "keyword": "DATE_RANGE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f3cfebc1375a3648bfd20e89556_DATE_RANGE",
+                "query": {
+                  "datasetName": "f21af48f",
+                  "parameters": [
+                    {
+                      "name": "DATE_RANGE",
+                      "keyword": "DATE_RANGE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f424f4516439a03d10097292188_DATE_RANGE",
+                "query": {
+                  "datasetName": "f2f6f48f",
+                  "parameters": [
+                    {
+                      "name": "DATE_RANGE",
+                      "keyword": "DATE_RANGE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "DATE_RANGE"
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "DATE_RANGE",
+                    "queryName": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f34af26183f9ce13cca92dbc198_DATE_RANGE"
+                  },
+                  {
+                    "parameterName": "DATE_RANGE",
+                    "queryName": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f37032f1bb2b90fbf2ba03da350_DATE_RANGE"
+                  },
+                  {
+                    "parameterName": "DATE_RANGE",
+                    "queryName": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f3b362f16dc86210433795f9d5a_DATE_RANGE"
+                  },
+                  {
+                    "parameterName": "DATE_RANGE",
+                    "queryName": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f3cd4c017d2bc84eded797063dc_DATE_RANGE"
+                  },
+                  {
+                    "parameterName": "DATE_RANGE",
+                    "queryName": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f3cfebc1375a3648bfd20e89556_DATE_RANGE"
+                  },
+                  {
+                    "parameterName": "DATE_RANGE",
+                    "queryName": "parameter_dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f424f4516439a03d10097292188_DATE_RANGE"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "80677d3b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "de775910",
+                  "fields": [
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Revenue"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_revenue)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "cac2e682",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6dbf5aec",
+                  "fields": [
+                    {
+                      "name": "countdistinct(customer_id)",
+                      "expression": "COUNT(DISTINCT `customer_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Active Customers"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(customer_id)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "95a14bdf",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "de775910",
+                  "fields": [
+                    {
+                      "name": "avg(total_revenue)",
+                      "expression": "AVG(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "AOV"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(total_revenue)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "8d3fef48",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "95501730",
+                  "fields": [
+                    {
+                      "name": "countdistinct(customer_id)",
+                      "expression": "COUNT(DISTINCT `customer_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Customers"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(customer_id)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "newly-joined-customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "newly_joined_customers",
+                  "fields": [
+                    {
+                      "name": "countdistinct(customer_id)",
+                      "expression": "COUNT(DISTINCT `customer_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Newly Joined Customers"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(customer_id)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "top-10-items",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f21af48f",
+                  "fields": [
+                    {
+                      "name": "total_quantity",
+                      "expression": "`total_quantity`"
+                    },
+                    {
+                      "name": "name",
+                      "expression": "`name`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 items"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_quantity",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "daily-sales",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "de775910",
+                  "fields": [
+                    {
+                      "name": "daily(order_date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `order_date`)"
+                    },
+                    {
+                      "name": "total_orders",
+                      "expression": "`total_orders`"
+                    },
+                    {
+                      "name": "avg_order_value",
+                      "expression": "`avg_order_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Daily Sales"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(order_date)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "total_orders"
+                    },
+                    {
+                      "fieldName": "avg_order_value"
+                    }
+                  ]
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "total-orders-1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6dbf5aec",
+                  "fields": [
+                    {
+                      "name": "day_of_week",
+                      "expression": "`day_of_week`"
+                    },
+                    {
+                      "name": "countdistinct(order_id)",
+                      "expression": "COUNT(DISTINCT `order_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Volume of orders on DOW"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "day_of_week",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "countdistinct(order_id)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 9,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "p1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6dbf5aec",
+                  "fields": [
+                    {
+                      "name": "countdistinct(order_id)",
+                      "expression": "COUNT(DISTINCT `order_id`)"
+                    },
+                    {
+                      "name": "order_hour",
+                      "expression": "`order_hour`"
+                    },
+                    {
+                      "name": "day_of_week",
+                      "expression": "`day_of_week`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Peak Hour Analysis"
+              },
+              "widgetType": "heatmap",
+              "encodings": {
+                "x": {
+                  "fieldName": "order_hour",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "day_of_week",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "color": {
+                  "fieldName": "countdistinct(order_id)",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "single-hue",
+                      "baseColor": {
+                        "themeColorType": "visualizationColors",
+                        "position": 4
+                      }
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6dbf5aec",
+                  "fields": [
+                    {
+                      "name": "sum(total_amount)",
+                      "expression": "SUM(`total_amount`)"
+                    },
+                    {
+                      "name": "order_type",
+                      "expression": "`order_type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by order Type"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "order_type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue-1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f2f6f48f",
+                  "fields": [
+                    {
+                      "name": "revenue",
+                      "expression": "`revenue`"
+                    },
+                    {
+                      "name": "food_category",
+                      "expression": "`food_category`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue By Food Category"
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "food_category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 21,
+            "width": 8,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "51237c8f",
+      "displayName": "Review Insights",
+      "layout": [
+        {
+          "widget": {
+            "name": "review",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "sum(total_reviews)",
+                      "expression": "SUM(`total_reviews`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Reviews"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_reviews)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "restaurant",
+            "queries": [
+              {
+                "name": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f49cd131e12b4edf1ebcce669d2_restaurant_name",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "restaurant_name",
+                      "expression": "`restaurant_name`"
+                    },
+                    {
+                      "name": "restaurant_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f4d11f1113fb7b37cb09097840f_restaurant_name",
+                "query": {
+                  "datasetName": "460a360b",
+                  "fields": [
+                    {
+                      "name": "restaurant_name",
+                      "expression": "`restaurant_name`"
+                    },
+                    {
+                      "name": "restaurant_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f5d05b0134793951374c97dce2c_restaurant_name",
+                "query": {
+                  "datasetName": "eee99837",
+                  "fields": [
+                    {
+                      "name": "restaurant_name",
+                      "expression": "`restaurant_name`"
+                    },
+                    {
+                      "name": "restaurant_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f5f03171f1595183f919b5af1a3_restaurant",
+                "query": {
+                  "datasetName": "22ad71a2",
+                  "fields": [
+                    {
+                      "name": "restaurant",
+                      "expression": "`restaurant`"
+                    },
+                    {
+                      "name": "restaurant_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f6157a11dd3b856f570a61833a5_restaurant",
+                "query": {
+                  "datasetName": "b6e153b6",
+                  "fields": [
+                    {
+                      "name": "restaurant",
+                      "expression": "`restaurant`"
+                    },
+                    {
+                      "name": "restaurant_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f62338d15d99ecc35d75e300692_restaurant",
+                "query": {
+                  "datasetName": "52e0410e",
+                  "fields": [
+                    {
+                      "name": "restaurant",
+                      "expression": "`restaurant`"
+                    },
+                    {
+                      "name": "restaurant_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Restaurant"
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "restaurant_name",
+                    "queryName": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f49cd131e12b4edf1ebcce669d2_restaurant_name"
+                  },
+                  {
+                    "fieldName": "restaurant_name",
+                    "queryName": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f4d11f1113fb7b37cb09097840f_restaurant_name"
+                  },
+                  {
+                    "fieldName": "restaurant_name",
+                    "queryName": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f5d05b0134793951374c97dce2c_restaurant_name"
+                  },
+                  {
+                    "fieldName": "restaurant",
+                    "queryName": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f5f03171f1595183f919b5af1a3_restaurant"
+                  },
+                  {
+                    "fieldName": "restaurant",
+                    "queryName": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f6157a11dd3b856f570a61833a5_restaurant"
+                  },
+                  {
+                    "fieldName": "restaurant",
+                    "queryName": "dashboards/01f17eaedcb71aba81058443ee54cbb2/datasets/01f17f62338d15d99ecc35d75e300692_restaurant"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "ccfe113b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "avg_rating",
+                      "expression": "`avg_rating`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "AVG Rating"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_rating"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "789621a9",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "City"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "city"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "4d42cbc8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "sum(sentiment_positive_count)",
+                      "expression": "SUM(`sentiment_positive_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Positive Reviews",
+                "showDescription": false
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(sentiment_positive_count)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "light": "#CCF0C3"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "6e94ccc5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "sum(sentiment_negative_count)",
+                      "expression": "SUM(`sentiment_negative_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Negative Reviews"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(sentiment_negative_count)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "light": "#F0C7C7"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "42089526",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1c0d9925",
+                  "fields": [
+                    {
+                      "name": "sum(sentiment_neutral_count)",
+                      "expression": "SUM(`sentiment_neutral_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Neutral Reviews"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(sentiment_neutral_count)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "light": "#F0EDC5"
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "sentiment-trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "460a360b",
+                  "fields": [
+                    {
+                      "name": "daily(review_date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `review_date`)"
+                    },
+                    {
+                      "name": "sum(positive_review_ct)",
+                      "expression": "SUM(`positive_review_ct`)"
+                    },
+                    {
+                      "name": "sum(negative_review_ct)",
+                      "expression": "SUM(`negative_review_ct`)"
+                    },
+                    {
+                      "name": "sum(neutral_review_ct)",
+                      "expression": "SUM(`neutral_review_ct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Review Sentiment Trend"
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(review_date)",
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(positive_review_ct)",
+                      "displayName": "positive_review_ct"
+                    },
+                    {
+                      "fieldName": "sum(negative_review_ct)",
+                      "displayName": "negative_review_ct"
+                    },
+                    {
+                      "fieldName": "sum(neutral_review_ct)",
+                      "displayName": "neutral_review_ct"
+                    }
+                  ]
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "review-distribution-1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "eee99837",
+                  "fields": [
+                    {
+                      "name": "sum(rating_count)",
+                      "expression": "SUM(`rating_count`)"
+                    },
+                    {
+                      "name": "rating_label",
+                      "expression": "`rating_label`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Review Distribution"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(rating_count)",
+                  "displayName": "Number of reviews",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "rating_label",
+                  "displayName": "Rating",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 3,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "f903ad4e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "22ad71a2",
+                  "fields": [
+                    {
+                      "name": "sum(issue_delivery_ct)",
+                      "expression": "SUM(`issue_delivery_ct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Delivery issue count"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(issue_delivery_ct)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "34f01dee",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "22ad71a2",
+                  "fields": [
+                    {
+                      "name": "sum(issue_food_quality_ct)",
+                      "expression": "SUM(`issue_food_quality_ct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Food Quality issue count"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(issue_food_quality_ct)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 9,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "b3a4c141",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "22ad71a2",
+                  "fields": [
+                    {
+                      "name": "sum(issue_portion_size_ct)",
+                      "expression": "SUM(`issue_portion_size_ct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Portion size issue ct"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(issue_portion_size_ct)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 9,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "e534a037",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "22ad71a2",
+                  "fields": [
+                    {
+                      "name": "sum(issue_pricing_ct)",
+                      "expression": "SUM(`issue_pricing_ct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Pricing issue ct"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(issue_pricing_ct)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 9,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "positive",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b6e153b6",
+                  "fields": [
+                    {
+                      "name": "review",
+                      "expression": "`review`"
+                    },
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`timestamp`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Positive reviews"
+              },
+              "style": {
+                "fontColor": {
+                  "light": "#3F96D6"
+                }
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "review"
+                  },
+                  {
+                    "fieldName": "timestamp"
+                  }
+                ],
+                "rowOrder": [
+                  {
+                    "by": "column",
+                    "field": {
+                      "index": 1
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ab1d03b9",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "52e0410e",
+                  "fields": [
+                    {
+                      "name": "review",
+                      "expression": "`review`"
+                    },
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`timestamp`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Negative reviews"
+              },
+              "style": {
+                "fontColor": {
+                  "light": "#B93766"
+                }
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "review"
+                  },
+                  {
+                    "fieldName": "timestamp"
+                  }
+                ],
+                "rowOrder": [
+                  {
+                    "by": "column",
+                    "field": {
+                      "index": 1
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F8FAFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "widgetBorderColor": {
+        "light": "#E5E7EB"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "widgetHeaderAlignment": "LEFT",
+      "gridLineColor": {
+        "light": "#EAEFF5"
+      },
+      "axisLineColor": {
+        "light": "#D6DEE8"
+      }
+    },
+    "genieSpace": {
+      "isEnabled": true,
+      "enablementMode": "ENABLED"
+    },
+    "applyModeEnabled": false
+  }
+}
