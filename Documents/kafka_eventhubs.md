@@ -15,7 +15,7 @@ Apache Kafka is an open-source, distributed event streaming platform designed fo
 - New consumers can be added without modifying producers
 
 <p align="center">
-    <img src="diagrams/Kafka_Architecture.png" width="1000"/>
+  <img src="../diagrams/Kafka_Architecture.png" width="100%">
 </p>
 
 ### 1. Core Infrastructure (Cluster & Storage)

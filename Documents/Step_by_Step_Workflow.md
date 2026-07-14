@@ -1,168 +1,284 @@
-=========================================================================================
+# Enterprise Restaurant Chain Analytics Lakehouse Platform
 
-**ENTERPRISE RESTAURANT CHAIN ANALYTICS LAKEHOUSE PLATFORM**
+## Overview
 
-=========================================================================================
+This document provides a detailed walkthrough of the end-to-end architecture implemented for the **Enterprise Restaurant Chain Analytics Lakehouse Platform**.
 
-**OLTP Data Modelling**
+The platform combines **batch and real-time data processing** using **Azure Databricks**, **Lakeflow Connect**, **Lakeflow Spark Declarative Pipelines (SDP)**, **Delta Lake**, **Unity Catalog**, and **Databricks Asset Bundles (DABs)** to build a scalable, governed, and production-style analytics platform.
 
-&#x09;    Conceptual Data Model  : Business Requirements
+---
 
-&#x09;    Logical Data Model     : ER Model (DBMS Independent)
+# Data Modeling
 
-&#x09;    Physical Data Model    : Azure SQL Database (3NF)
+## OLTP Data Modeling
 
+| Model | Purpose |
+|--------|---------|
+| Conceptual Data Model | Capture business requirements and entities |
+| Logical Data Model | Define relationships independent of the database platform |
+| Physical Data Model | Azure SQL Database (3NF) |
 
+---
 
-**OLAP Data Modelling**
+## OLAP Data Modeling
 
-&#x09;    Dimensional Model      : Kimball - Fact Constellation (Galaxy Schema)
+| Model | Purpose |
+|--------|---------|
+| Kimball Fact Constellation (Galaxy Schema) | Analytical model for reporting and business intelligence |
 
+---
 
+# Architecture Pattern
 
-**SOURCE SYSTEMS**
+```text
+Medallion Architecture
 
+Bronze
+   │
+   ▼
+Silver
+   │
+   ▼
+Gold
+```
 
+---
 
-&#x09;Azure SQL Database
+# Source Systems
 
-&#x09;    ├── restaurants
+## Azure SQL Database (Batch)
 
-&#x09;    ├── menu\_items
+Operational tables
 
-&#x09;    ├── customers
+```text
+restaurants
+menu_items
+customers
+historical_orders
+reviews
+```
 
-&#x09;    ├── historical\_orders
+**Ingestion Method**
 
-&#x09;    └── reviews
+- Initial Full Load
+- Incremental CDC
+- Lakeflow Connect
 
+---
 
+## Azure Event Hubs (Streaming)
 
-&#x09;Azure Event Hubs
+Streaming source
 
-&#x09;    └── orders (Real-Time Order Stream)
+```text
+orders
+```
 
-**===========================================================================================================================**
+**Ingestion Method**
 
+- Azure Event Hubs
+- Kafka-compatible endpoint
+- Lakeflow Spark Declarative Pipelines (SDP)
 
+---
 
-**BRONZE LAYER :  Objects - Streaming Tables; Compute - Serverless**
+# Bronze Layer
 
+**Objects**
 
+- Streaming Tables
 
-&#x09;Purpose  : Ingest raw source data with minimal transformation.
+**Compute**
 
-&#x09;Ingestion:
+- Serverless
 
-&#x09;	Azure SQL Database : Initial Full Load followed by Incremental CDC ingestion using Lakeflow Connect.
+**Purpose**
 
-&#x09;	Azure Event Hubs   : Real-time streaming ingestion using Lakeflow Spark Declarative Pipelines (SDP).
+Ingest raw source data while preserving source fidelity with minimal transformations.
 
-&#x09;Bronze Tables
+## Data Ingestion
 
-&#x09;    ├── restaurants
+| Source | Method |
+|---------|--------|
+| Azure SQL Database | Initial Full Load followed by Incremental CDC using Lakeflow Connect |
+| Azure Event Hubs | Real-time Streaming using Lakeflow Spark Declarative Pipelines (SDP) |
 
-&#x09;    ├── menu\_items
+## Bronze Tables
 
-&#x09;    ├── customers
+```text
+restaurants
+menu_items
+customers
+historical_orders
+reviews
+orders
+```
 
-&#x09;    ├── historical\_orders
+---
 
-&#x09;    ├── reviews
+# Silver Layer
 
-&#x09;    └── orders
+**Objects**
 
-**===========================================================================================================================**
+- Streaming Tables
 
+**Compute**
 
+- Serverless
 
+**Purpose**
 
+Cleanse, standardize, enrich, validate, and model data for downstream analytics.
 
-**SILVER LAYER : Objects - Streaming Tables; Compute - Serverless; Data Quality; Dimensional Modelling, SCD-2**
+## Features
 
+- Data Quality Validation
+- Schema Enforcement
+- SCD Type 2
+- Dimensional Modeling
+- Streaming Transformations
 
+## Fact Tables
 
-&#x09;Purpose : Cleanse, standardize, enrich, and model data for analytics.
+| Table | Description |
+|--------|-------------|
+| fact_orders | Combines bronze.orders and bronze.historical_orders using SCD Type 2, SDP, and Data Quality Validation |
+| fact_order_items | Parses nested order items and combines historical and streaming orders using SCD Type 2 |
+| fact_reviews | Customer reviews enriched using Mosaic AI Sentiment Analysis, SCD Type 2, and Data Quality Validation |
 
+## Dimension Tables
 
+| Table | Description |
+|--------|-------------|
+| dim_restaurants | Restaurant master data with SCD Type 2 |
+| dim_customers | Customer master data with SCD Type 2 |
+| dim_menu_items | Menu catalog with SCD Type 2 |
 
-&#x09;**Fact Tables**
+---
 
-&#x09;	fact\_orders      = Combines bronze.orders + bronze.historical\_orders + SCD Type 2 + Lakeflow Spark Declarative Pipelines (SDP) + Data Quality Checks
+# Gold Layer
 
-&#x09;	fact\_order\_items = combine bronze.orders + bronze.historical\_orders + Parse Order Item JSON + SCD Type 2 + Lakeflow Spark Declarative Pipelines (SDP) + Data Quality Checks
+**Objects**
 
-&#x09;	fact\_reviews     = Source: bronze.reviews + SCD Type 2 + Lakeflow Spark Declarative Pipelines (SDP) + Data Quality Checks + Mosaic AI Sentiment Analysis
+- Materialized Views
 
+**Compute**
 
+- Serverless
 
-&#x09;**Dimension Tables**
+**Purpose**
 
-&#x09;	dim\_restaurants = Source: bronze.restaurants + SCD Type 2 + Lakeflow Spark Declarative Pipelines (SDP) + Data Quality Checks
+Business-ready analytical datasets optimized for reporting, self-service analytics, and AI/BI workloads.
 
-&#x09;	dim\_customers   = Source: bronze.customers + SCD Type 2 + Lakeflow Spark Declarative Pipelines (SDP) + Data Quality Checks
+## Optimizations
 
-&#x09;	dim\_menu\_items  = Source: bronze.menu\_items + SCD Type 2 + Lakeflow Spark Declarative Pipelines (SDP) + Data Quality Checks
+- Liquid Clustering
+- Adaptive Query Execution (AQE)
+- VACUUM
+- OPTIMIZE
 
-**===========================================================================================================================**
+## Gold Data Products
 
+| Dataset | Source |
+|---------|--------|
+| gold_daily_sales_summary | fact_orders |
+| gold_daily_restaurant_reviews | fact_reviews + dim_restaurants |
+| gold_daily_customer_360 | fact_orders + fact_order_items + fact_reviews + dim_customers + dim_restaurants |
 
+---
 
+# Orchestration & DevOps
 
+## Lakeflow Jobs
 
-**GOLD LAYER : Objects - Materialized Views; Compute - Serverless; Optimizations - Liquid Clustering on Tables; Vaccum; AQE (for joins, skew handling, Partition Tuning)**
+Responsible for
 
+- Pipeline Orchestration
+- Scheduled Refreshes
+- Streaming Pipeline Monitoring
+- Failure Notifications
+- Job Monitoring
 
+---
 
-&#x09;	Purpose:    Business-ready analytical datasets optimized for reporting and AI/BI.
+## Unity Catalog
 
-&#x09;	gold\_daily\_sales\_summary       = Source: fact\_orders
+Provides centralized governance through
 
-&#x09;	gold\_daily\_restaurant\_reviews  = Source: fact\_reviews + dim\_restaurants
+- Role-Based Access Control (RBAC)
+- PII Masking
+- Delta Sharing
+- Data Lineage
+- External Locations
 
-&#x09;	gold\_daily\_customer\_360 	  = Source: fact\_orders + fact\_order\_items + fact\_reviews + dim\_customers +  dim\_restaurants
+---
 
-**===========================================================================================================================**
+## Storage
 
+- Azure Data Lake Storage Gen2
+- Delta Lake Tables
+- Unity Catalog External Locations
+- Azure Databricks Access Connector
 
+---
 
-**ORCHESTRATION \& DEVOPS**
+## Databricks Asset Bundles (DABs)
 
-&#x09;	Lakeflow Jobs : Orchestrates Bronze, Silver, and Gold pipelines; Daily Scheduled Refreshes; Failure Alerts \& Notifications; Job Monitoring
+Provides
 
-&#x09;	Unity Catalog : Centralized Governance; RBAC; PII Masking; Delta Sharing; Data Lineage
+- Infrastructure as Code (IaC)
+- CI/CD Pipeline Automation
+- Environment-specific Deployments (Dev/Test/Prod)
+- GitHub Integration
+- Configuration Management
 
-&#x09;	Storage       : ADLS Gen2 with Delta Lake Tables governed by Unity Catalog External Locations and secured using Azure Databricks Access Connector.
+---
 
-&#x09;	Databricks Asset Bundles (DABs)
+# Consumption Layer
 
-&#x09;		    ├── Infrastructure as Code (IaC)
+**Compute**
 
-&#x09;		    ├── CI/CD Pipeline Automation
+- Serverless SQL Warehouse
 
-&#x09;		    ├── Environment-specific Deployments (Dev / Test / Prod)
+Business users consume curated Gold layer datasets through
 
-&#x09;		    └── GitHub Integration
+- Power BI Dashboards
+- Databricks AI/BI Genie
+- Business Users
 
-**===========================================================================================================================**
+These datasets support KPI reporting, restaurant performance analysis, Customer 360 analytics, review insights, and AI-powered natural language querying.
 
+---
 
+# End-to-End Data Flow
 
+```text
+                 Azure SQL Database
+                         │
+        Lakeflow Connect (CDC)
+                         │
+                         ▼
+                Bronze Streaming Tables
+                         ▲
+                         │
+Azure Event Hubs ──► Spark Declarative Pipelines
+                         │
+                         ▼
+                Bronze Streaming Tables
+                         │
+                         ▼
+                Silver Streaming Tables
+                         │
+                         ▼
+               Gold Materialized Views
+                         │
+         ┌───────────────┴───────────────┐
+         ▼                               ▼
+      AI/BI Dashboards                AI/BI Genie
+```
 
+---
 
-**CONSUMPTION LAYER : Cluster - Serverless SQL Warehouse**
+# Summary
 
-Consumption
-
-&#x20;   ├── Power BI Dashboards
-
-&#x20;   ├── AI/BI Genie
-
-&#x20;   └── Business Users
-
-
-
-Business users consume curated Gold Layer data through AI/BI Dashboards \& AI-powered natural language analytics.
-
-**===========================================================================================================================**
-
+This project demonstrates a production-style Azure Databricks Lakehouse implementation that integrates **batch ingestion**, **real-time streaming**, **dimensional modeling**, **data governance**, **Infrastructure as Code**, and **AI-powered analytics** into a scalable enterprise data platform.
