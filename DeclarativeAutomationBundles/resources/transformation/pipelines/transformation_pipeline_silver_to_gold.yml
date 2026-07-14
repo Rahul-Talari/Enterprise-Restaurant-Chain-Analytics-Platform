@@ -10,8 +10,8 @@ resources:
 
       libraries:
         - file:
-            path: ../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_customer_360.py
+            path: ../../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_customer_360.py
         - file:
-            path: ../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_restaurant_reviews.py
+            path: ../../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_restaurant_reviews.py
         - file:
-            path: ../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_sales_summary.py
+            path: ../../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_sales_summary.py

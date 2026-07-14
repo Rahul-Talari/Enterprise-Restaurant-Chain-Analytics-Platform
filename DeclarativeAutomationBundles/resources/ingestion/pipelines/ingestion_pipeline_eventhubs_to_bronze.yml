@@ -15,4 +15,4 @@ resources:
 
       libraries:
         - file:
-            path: ../../sources/1_ingestion_eventhubs_to_bronze/transformations/eventhub.py
+            path: ../../../sources/1_ingestion_eventhubs_to_bronze/transformations/eventhub.py
