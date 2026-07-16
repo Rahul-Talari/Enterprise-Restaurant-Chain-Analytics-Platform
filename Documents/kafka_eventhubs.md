@@ -1,126 +1,136 @@
-# Apache Kafka & Azure Event Hubs - Notes
-
-## Apache Kafka Overview
-Apache Kafka is an open-source, distributed event streaming platform designed for high-throughput, real-time data pipelines. It enables applications to write and read event streams in a durable, ordered, and scalable way.
-
-### Traditional Architecture
-- Tightly coupled, synchronous communication
-- Producers wait for consumers
-- Adding new consumers often requires producer changes
-
-### Kafka Architecture
-- Loosely coupled, asynchronous system
-- Producers publish messages to topics
-- Multiple consumer groups can independently consume the same data
-- New consumers can be added without modifying producers
 
 <p align="center">
-  <img src="../diagrams/Kafka_Architecture.png" width="70%">
+  <img src="../diagrams/Kafka_Architecture.png" width="110%">
 </p>
 
-### 1. Core Infrastructure (Cluster & Storage)
 
-**Kafka Cluster**
-- A group of brokers working together for scalability and fault tolerance
-- Managed via:
-  - KRaft (modern Kafka)
-  - ZooKeeper (legacy systems)
-- Handles metadata, controller quorum, and leader election
-
-**Broker**
-- Kafka server that stores partition logs
-- Handles producer and consumer requests
-- Supports replication for fault tolerance
-- Leader handles reads/writes, followers replicate data
+# Kafka
 
 ---
 
-### 2. Data Organization
+## Definition
 
-**Topic**
-- Logical stream of data (like a table)
+An open-source, distributed event streaming platform designed for high-throughput, real-time data pipelines for big data.
 
-**Partition**
-- Physical, ordered log of messages
-- Each message has a unique offset
-- Ensures ordering within a partition
-- Enables parallel processing
+- **Scalable**     : TBs of data & millions of events/sec.
+- **Reliable**     : Fault tolerance through replication.
+- **Durable**      : Persistent storage with configurable retention.
+- **Distributed**  : Multiple brokers for scalability.
+
+### Traditional Architecture
+
+- Tightly coupled, synchronous communication.
+- Producers wait for consumers to complete consumption.
+- Adding new consumers often requires producer changes.
+
+### Kafka Architecture
+
+- Loosely coupled, asynchronous system.
+- Producers publish messages to topics.
+- Multiple consumer groups independently consume the same data.
+- New consumers can be added without modifying producers.
 
 ---
 
-### 3. Kafka Message Structure
+## Kafka Architecture
+
+```text
+                           Producer
+                               │
+                               ▼
+        Kafka Cluster (Brokers • KRaft • Retention Policy)
+                               │
+                               ▼
+     Topic (Partitions • Replication Factor • Message Structure)
+                               │
+                               ▼
+      Consumer Group (consumer-1, consumer-2, consumer-n)
+
+Policy
+
+Kafka             : ACL (create, alter, describe, write, read, delete)
+Azure Event Hubs  : Send, Listen, Manage
+```
+
+---
+
+## Kafka Cluster
+
+A collection of brokers that work together to provide scalability, HA, and fault tolerance.
+
+### 1. Broker
+
+A Kafka server that stores topic partitions and serves producer/consumer requests.
+
+### 2. KRaft
+
+Kafka's metadata management mode that manages cluster metadata (brokers, topics, partitions, leaders, replicas) and performs leader elections.
+
+### 3. Retention Policy
+
+Defines how long or how much data Kafka retains before deletion.
+
+- **Time-based** : `log.retention.hours`
+- **Size-based** : `log.retention.bytes`
+
+---
+
+## Topic
+
+A logical stream of messages (similar to a table in a database).
+
+### 1. Partition
+
+- Divides a topic into multiple partitions for parallel processing and scalability.
+- Messages are assigned using a message key (hashing) or the producer's partitioning strategy (ex: sticky/round-robin).
+- Ordering is guaranteed only within a partition.
+
+### 2. Replication Factor
+
+- Number of copies of each partition stored across different brokers for fault tolerance and high availability (HA).
+- Each partition has one leader and one or more follower replicas.
+- On leader failure, KRaft automatically elects an in-sync follower as the new leader.
+
+### 3. Message Structure
+
 - Key
-- Value
-- Headers
+- Value (actual data)
+- Headers (optional metadata)
 - Timestamp
 
-Retention policies:
-- Time-based (log.retention.hours)
-- Size-based (log.retention.bytes)
+---
+
+## Producers
+
+- Publish messages to one or more topics using an asynchronous (fire-and-forget) model.
+- Route messages to partitions using a key or the producer's partitioning strategy.
+
+Support:
+
+- **Batching** : Groups multiple messages into a single network request to improve throughput and reduce network overhead.
+- **Compression** : Compresses messages before sending to reduce network bandwidth and storage usage.
+- **Retries** : Automatically retries sending messages in case of transient failures.
+- **Acknowledgments** : Confirms successful message delivery from Kafka brokers, ensuring reliable delivery.
 
 ---
 
-### 4. Producers (Write Path)
-- Publish messages to topics
-- Fire-and-forget model (async)
-- Uses bootstrap broker to connect
-- Partitioning via key or round-robin
-- Supports batching, compression, retries, acknowledgments
+## Consumer Groups
+
+- A logical group of consumers that work together to consume a topic.
+- Within a consumer group, each partition is assigned to only one consumer at a time, while a consumer can read one or more partitions.
+- Each consumer group maintains its own partition offsets/partitions, allowing multiple CG's to independently consume & replay the same topic (subject to retention policy).
 
 ---
 
-### 5. Consumers (Read Path)
-- Subscribe to topics
-- Read messages from partitions
-- Track progress using offsets
-- Can replay data by resetting offsets
+## Consumers
 
-**Consumer Groups**
-- Across groups: independent consumption
-- Within group: one partition per consumer
-- Max parallelism = number of partitions
+Subscribe to one or more topics and read messages from the assigned partition(s), tracking their progress using offsets.
 
 ---
 
-## Kafka Benefits
-- High throughput (sequential log-based storage)
-- Fault tolerance (replication)
-- Scalability (brokers + partitions)
-- Durability (persistent logs)
+## Architectural Benefits
 
----
-
-## Azure Event Hubs Overview
-Azure Event Hubs is a big data event streaming platform for ingesting millions of events per second with high reliability and low latency.
-
-### Core Concepts
-
-#### Infrastructure Layer
-- Namespace (Cluster)
-- Broker services
-- Managed by Azure (KRaft-like internal management)
-
-#### Data Storage Layer
-- Event Hub (Topic equivalent)
-- Partitions
-- Retention policies
-- Replication (managed by Azure)
-
-#### Ingestion & Consumption Layer
-- Producers send events
-- Consumers read events
-- Consumer groups enable parallel processing
-
-#### **Security Layer** : Send policies, Listen policies, Manage policies
-
----
-
-## Comparison Summary
-
-| Feature | Kafka | Azure Event Hubs |
-|--------|------|------------------|
-| Type | Open-source platform | Managed cloud service |
-| Scaling | Manual (brokers/partitions) | Automatic |
-| Management | Self-managed or cloud | Fully managed |
-| Storage | Distributed log | Managed event stream |
-| Consumers | Consumer groups | Consumer groups |
+1. **High throughput** : Sequential append-only disk writes enable high read/write throughput.
+2. **Fault tolerance** : Replication Factor across brokers.
+3. **Scalability** : Add brokers & partitions.
+4. **Durability** : Persisted to disk with configurable retention policies.
