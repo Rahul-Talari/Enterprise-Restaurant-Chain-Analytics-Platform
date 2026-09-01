@@ -5,7 +5,7 @@
 
 ---
 
-# Architecture
+# Architecture.
 
 <p align="center">
   <img src="./diagrams/8_project architecture.png" width="100%">
