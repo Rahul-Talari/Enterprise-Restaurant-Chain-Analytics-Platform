@@ -223,3 +223,11 @@ Enterprise-Restaurant-Chain-Analytics-Platform
 **Rahul Talari**
 
 Enterprise Data Engineering Portfolio Project demonstrating production-style Azure Databricks architecture, modern Lakehouse engineering practices and analytics engineering.
+
+
+# Contributors
+
+- Rahul Talari
+- Parimala Sri Sikhakolli
+
+Enterprise Data Engineering Portfolio Project demonstrating production-style Azure Databricks architecture, modern Lakehouse engineering practices, and analytics engineering.
