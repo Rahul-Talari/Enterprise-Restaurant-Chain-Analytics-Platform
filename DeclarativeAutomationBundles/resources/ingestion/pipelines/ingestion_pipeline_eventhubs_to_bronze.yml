@@ -7,7 +7,7 @@ resources:
       schema: ${var.bronze_schema}
 
       serverless: true
-      continuous: true
+      continuous: false  # triggered: master_job runs it hourly; a continuous pipeline never finishes, which blocks downstream tasks
       max_concurrent_runs: 4
 
       configuration:

@@ -2,8 +2,11 @@ from pyspark import pipelines as dp
 from pyspark.sql.functions import *
 from pyspark.sql.types import DecimalType
 
+CATALOG = spark.conf.get("catalog")
+SILVER_SCHEMA = spark.conf.get("silver_schema")
+
 @dp.materialized_view(
-    name="03_gold.d_sales_summary",
+    name="d_sales_summary",
     partition_cols=["order_date"],
     table_properties={"quality": "gold"},
     comment="Gold layer aggregates with date-based overwrites"
@@ -11,7 +14,7 @@ from pyspark.sql.types import DecimalType
 def d_sales_summary():
 
     return (
-        spark.read.table("02_silver.fact_orders")
+        spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.fact_orders")
             .groupBy("order_date")
             .agg(
                 countDistinct("order_id").alias("total_orders"),

@@ -1,0 +1,80 @@
+# CI/CD for the Databricks Asset Bundle
+#
+#   Pull request to master  -> check Python syntax, validate the dev and prod targets
+#   Push to master          -> validate and deploy the prod target
+#   Manual run              -> deploy to the chosen target
+#
+# Repository secrets (Settings > Secrets and variables > Actions):
+#   DATABRICKS_HOST           workspace URL, e.g. https://adb-<id>.azuredatabricks.net
+#   DATABRICKS_CLIENT_ID      service principal application ID
+#   DATABRICKS_CLIENT_SECRET  service principal OAuth secret
+
+name: Databricks Bundle CI/CD
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "DeclarativeAutomationBundles/**"
+      - ".github/workflows/databricks-bundle.yml"
+  push:
+    branches: [master]
+    paths:
+      - "DeclarativeAutomationBundles/**"
+      - ".github/workflows/databricks-bundle.yml"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Bundle target to deploy
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+concurrency:
+  group: databricks-bundle-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+
+defaults:
+  run:
+    working-directory: DeclarativeAutomationBundles
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Python syntax
+        run: python -m compileall -q sources
+
+      - uses: databricks/setup-cli@main
+
+      - name: Validate dev target
+        run: databricks bundle validate --target dev
+
+      - name: Validate prod target
+        run: databricks bundle validate --target prod
+
+  deploy:
+    name: Deploy
+    needs: validate
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'push' && 'prod' || inputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: databricks/setup-cli@main
+
+      - name: Deploy bundle
+        run: databricks bundle deploy --target ${{ github.event_name == 'push' && 'prod' || inputs.target }}

@@ -2,21 +2,31 @@ from pyspark import pipelines as dp
 from pyspark.sql.functions import *
 from pyspark.sql.types import DecimalType
 
+CATALOG = spark.conf.get("catalog")
+SILVER_SCHEMA = spark.conf.get("silver_schema")
+GOVERNANCE_SCHEMA = spark.conf.get("governance_schema")
+
+# Restaurant-level isolation: users see only the restaurants mapped to them in
+# <governance_schema>.restaurant_access (owners and data engineers see all).
+# The function is created by sources/5_governance/governance.py (stage "setup").
+ROW_FILTER = f"ROW FILTER {CATALOG}.`{GOVERNANCE_SCHEMA}`.restaurant_filter ON (restaurant_id)"
+
 
 @dp.materialized_view(
-    name="databricksproject_ws.03_gold.d_restaurant_reviews",
+    name="d_restaurant_reviews",
+    row_filter=ROW_FILTER,
     table_properties={"quality": "gold"}
 )
 def d_restaurant_reviews():
 
     # Current Restaurant Dimension (SCD Type 2)
     df_restaurants = (
-        spark.read.table("databricksproject_ws.`02_silver`.dim_restaurants")
+        spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.dim_restaurants")
              .filter(col("__END_AT").isNull())
     )
 
     # Review Fact
-    df_reviews = spark.read.table("databricksproject_ws.`02_silver`.fact_reviews")
+    df_reviews = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.fact_reviews")
 
     # Aggregate Review Statistics
     df_review_stats = (

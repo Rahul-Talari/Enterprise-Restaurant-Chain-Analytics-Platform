@@ -13,12 +13,49 @@ resources:
         timezone_id: UTC
         pause_status: UNPAUSED
 
+      # Serverless environment for the Python script tasks
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+
       tasks:
+        # Governance objects the pipelines depend on (row-filter function, grants)
+        - task_key: governance_setup
+          environment_key: default
+          spark_python_task:
+            python_file: ../../../sources/5_governance/governance.py
+            parameters:
+              - --stage
+              - setup
+              - --catalog
+              - ${var.catalog}
+              - --bronze_schema
+              - ${var.bronze_schema}
+              - --silver_schema
+              - ${var.silver_schema}
+              - --gold_schema
+              - ${var.gold_schema}
+              - --governance_schema
+              - ${var.governance_schema}
+              - --secure_schema
+              - ${var.secure_schema}
+              - --owners_group
+              - ${var.owners_group}
+              - --analysts_group
+              - ${var.analysts_group}
+              - --engineers_group
+              - ${var.engineers_group}
+
         - task_key: ingestion_sql_to_bronze
+          depends_on:
+            - task_key: governance_setup
           pipeline_task:
             pipeline_id: ${resources.pipelines.ingestion_pipeline_sqldb_to_bronze.id}
 
         - task_key: ingestion_eventhub_to_bronze
+          depends_on:
+            - task_key: governance_setup
           pipeline_task:
             pipeline_id: ${resources.pipelines.ingestion_pipeline_eventhubs_to_bronze.id}
 
@@ -29,8 +66,70 @@ resources:
           pipeline_task:
             pipeline_id: ${resources.pipelines.transformation_pipeline_bronze_to_silver.id}
 
+        # Fails (and emails) when rows were quarantined this run; runs in
+        # parallel with silver_to_gold so it never blocks the Gold refresh.
+        - task_key: dq_alert
+          depends_on:
+            - task_key: bronze_to_silver
+          environment_key: default
+          spark_python_task:
+            python_file: ../../../sources/6_data_quality/dq_alert.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --silver_schema
+              - ${var.silver_schema}
+              - --threshold
+              - ${var.dq_alert_threshold}
+
         - task_key: silver_to_gold
           depends_on:
             - task_key: bronze_to_silver
           pipeline_task:
             pipeline_id: ${resources.pipelines.transformation_pipeline_silver_to_gold.id}
+
+        # Semantic layer: metric views with shared KPI definitions
+        - task_key: metric_views
+          depends_on:
+            - task_key: silver_to_gold
+          environment_key: default
+          spark_python_task:
+            python_file: ../../../sources/7_semantic_layer/metric_views.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --silver_schema
+              - ${var.silver_schema}
+              - --gold_schema
+              - ${var.gold_schema}
+              - --governance_schema
+              - ${var.governance_schema}
+
+        # Tags, ABAC policy, dynamic views and grants (need the tables to exist)
+        - task_key: governance_apply
+          depends_on:
+            - task_key: metric_views
+          environment_key: default
+          spark_python_task:
+            python_file: ../../../sources/5_governance/governance.py
+            parameters:
+              - --stage
+              - apply
+              - --catalog
+              - ${var.catalog}
+              - --bronze_schema
+              - ${var.bronze_schema}
+              - --silver_schema
+              - ${var.silver_schema}
+              - --gold_schema
+              - ${var.gold_schema}
+              - --governance_schema
+              - ${var.governance_schema}
+              - --secure_schema
+              - ${var.secure_schema}
+              - --owners_group
+              - ${var.owners_group}
+              - --analysts_group
+              - ${var.analysts_group}
+              - --engineers_group
+              - ${var.engineers_group}

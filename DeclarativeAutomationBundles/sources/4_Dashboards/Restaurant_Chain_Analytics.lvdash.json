@@ -7,7 +7,7 @@
         "select\r\n",
         "  *\r\n",
         "from\r\n",
-        "  databricksproject_ws.`03_gold`.d_sales_summary\r\n",
+        "  `03_gold`.d_sales_summary\r\n",
         "WHERE\r\n",
         "  order_date between :DATE_RANGE.min AND :DATE_RANGE.max;"
       ],
@@ -35,7 +35,7 @@
       "name": "6dbf5aec",
       "displayName": "fact_orders",
       "queryLines": [
-        "select * from databricksproject_ws.`02_silver`.fact_orders\r\n",
+        "select * from `02_silver`.fact_orders\r\n",
         "where order_date between :DATE_RANGE.min and :DATE_RANGE.max;"
       ],
       "parameters": [
@@ -65,7 +65,7 @@
         "select\n",
         "  *\n",
         "from\n",
-        "  databricksproject_ws.`02_silver`.dim_customers\n",
+        "  `02_silver`.dim_customers\n",
         "where\n",
         "  join_date <= :DATE_RANGE.max;"
       ],
@@ -90,7 +90,7 @@
         "select\n",
         "  *\n",
         "from\n",
-        "  databricksproject_ws.`02_silver`.dim_customers\n",
+        "  `02_silver`.dim_customers\n",
         "where\n",
         "  join_date between :DATE_RANGE.min and :DATE_RANGE.max;"
       ],
@@ -119,7 +119,7 @@
       "displayName": "Top Ten Most Popular Menu Selections Summary",
       "queryLines": [
         "with top10 as (\r\n",
-        "select item_id, sum(quantity) as total_quantity from databricksproject_ws.`02_silver`.fact_order_items\r\n",
+        "select item_id, sum(quantity) as total_quantity from `02_silver`.fact_order_items\r\n",
         "where order_timestamp between :DATE_RANGE.min and :DATE_RANGE.max\r\n",
         "group by item_id\r\n",
         "sort by sum(quantity) desc\r\n",
@@ -127,7 +127,7 @@
         ")\r\n",
         "\r\n",
         "select menu_items.name, top10.total_quantity from top10\r\n",
-        "left join databricksproject_ws.`02_silver`.dim_menu_items menu_items\r\n",
+        "left join `02_silver`.dim_menu_items menu_items\r\n",
         "on top10.item_id==menu_items.item_id;\r\n"
       ],
       "parameters": [
@@ -157,8 +157,8 @@
         "SELECT\r\n",
         "  mi.category AS food_category,\r\n",
         "  SUM(foi.subtotal) AS revenue\r\n",
-        "FROM databricksproject_ws.`02_silver`.fact_order_items foi\r\n",
-        "INNER JOIN databricksproject_ws.`02_silver`.dim_menu_items mi\r\n",
+        "FROM `02_silver`.fact_order_items foi\r\n",
+        "INNER JOIN `02_silver`.dim_menu_items mi\r\n",
         "  ON foi.item_id = mi.item_id\r\n",
         " AND foi.restaurant_id = mi.restaurant_id\r\n",
         "WHERE foi.order_timestamp BETWEEN :DATE_RANGE.min AND :DATE_RANGE.max\r\n",
@@ -183,15 +183,13 @@
             }
           }
         }
-      ],
-      "catalog": "databricksproject_ws",
-      "schema": "02_silver"
+      ]
     },
     {
       "name": "1c0d9925",
       "displayName": "Restaurant_reviews",
       "queryLines": [
-        "select * from databricksproject_ws.`03_gold`.d_restaurant_reviews;"
+        "select * from `03_gold`.d_restaurant_reviews;"
       ]
     },
     {
@@ -204,8 +202,8 @@
         "  COUNT(DISTINCT CASE WHEN sentiment='positive' then order_id else null end) positive_review_ct,\r\n",
         "  COUNT(DISTINCT CASE WHEN sentiment='negative' then order_id else null end) negative_review_ct,\r\n",
         "  COUNT(DISTINCT CASE WHEN sentiment='neutral' then order_id else null end) neutral_review_ct\r\n",
-        "from databricksproject_ws.`02_silver`.fact_reviews reviews\r\n",
-        "inner join databricksproject_ws.`02_silver`.dim_restaurants restaurants\r\n",
+        "from `02_silver`.fact_reviews reviews\r\n",
+        "inner join `02_silver`.dim_restaurants restaurants\r\n",
         "on reviews.restaurant_id = restaurants.restaurant_id\r\n",
         "GROUP BY review_date, restaurant_name\r\n",
         "ORDER BY review_date, restaurant_name;\r\n"
@@ -217,23 +215,23 @@
       "queryLines": [
         "select restaurant_name,\r\n",
         "       '5 star' as rating_label, rating_5_count as rating_count\r\n",
-        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "from `03_gold`.d_restaurant_reviews\r\n",
         "union all\r\n",
         "select restaurant_name,\r\n",
         "       '4 star' as rating_label, rating_4_count as rating_count\r\n",
-        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "from `03_gold`.d_restaurant_reviews\r\n",
         "union all\r\n",
         "select restaurant_name,\r\n",
         "       '3 star' as rating_label, rating_3_count as rating_count\r\n",
-        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "from `03_gold`.d_restaurant_reviews\r\n",
         "union all\r\n",
         "select restaurant_name,\r\n",
         "       '2 star' as rating_label, rating_2_count as rating_count\r\n",
-        "from databricksproject_ws.`03_gold`.d_restaurant_reviews\r\n",
+        "from `03_gold`.d_restaurant_reviews\r\n",
         "union all\r\n",
         "select restaurant_name,\r\n",
         "       '1 star' as rating_label, rating_1_count as rating_count\r\n",
-        "from databricksproject_ws.`03_gold`.d_restaurant_reviews"
+        "from `03_gold`.d_restaurant_reviews"
       ]
     },
     {
@@ -246,8 +244,8 @@
         "  count(distinct case when review.issue_food_quality = true then review.order_id else null end) as issue_food_quality_ct,\r\n",
         "  count(distinct case when review.issue_pricing = true then review.order_id else null end) as issue_pricing_ct,\r\n",
         "  count(distinct case when review.issue_portion_size = true then review.order_id else null end) as issue_portion_size_ct\r\n",
-        "from databricksproject_ws.02_silver.fact_reviews review\r\n",
-        "join databricksproject_ws.02_silver.dim_restaurants restaurant\r\n",
+        "from `02_silver`.fact_reviews review\r\n",
+        "join `02_silver`.dim_restaurants restaurant\r\n",
         "  on review.restaurant_id = restaurant.restaurant_id\r\n",
         "where restaurant.__END_AT is null\r\n",
         "group by restaurant.name;"
@@ -262,15 +260,13 @@
         "  reviews.review_text AS review,\r\n",
         "  rest.name AS restaurant,\r\n",
         "  reviews.review_timestamp AS timestamp\r\n",
-        "FROM databricksproject_ws.`02_silver`.fact_reviews reviews\r\n",
-        "JOIN databricksproject_ws.`02_silver`.dim_restaurants rest\r\n",
+        "FROM `02_silver`.fact_reviews reviews\r\n",
+        "JOIN `02_silver`.dim_restaurants rest\r\n",
         "  ON reviews.restaurant_id = rest.restaurant_id\r\n",
         "WHERE reviews.sentiment = 'positive'\r\n",
         "  AND reviews.review_text IS NOT NULL\r\n",
         "ORDER BY reviews.review_timestamp DESC;"
-      ],
-      "catalog": "databricksproject_ws",
-      "schema": "02_silver"
+      ]
     },
     {
       "name": "52e0410e",
@@ -281,8 +277,8 @@
         "  reviews.review_text AS review,\r\n",
         "  rest.name AS restaurant,\r\n",
         "  reviews.review_timestamp AS timestamp\r\n",
-        "FROM databricksproject_ws.`02_silver`.fact_reviews reviews\r\n",
-        "JOIN databricksproject_ws.`02_silver`.dim_restaurants rest\r\n",
+        "FROM `02_silver`.fact_reviews reviews\r\n",
+        "JOIN `02_silver`.dim_restaurants rest\r\n",
         "  ON reviews.restaurant_id = rest.restaurant_id\r\n",
         "WHERE reviews.sentiment = 'negative'\r\n",
         "  AND reviews.review_text IS NOT NULL\r\n",

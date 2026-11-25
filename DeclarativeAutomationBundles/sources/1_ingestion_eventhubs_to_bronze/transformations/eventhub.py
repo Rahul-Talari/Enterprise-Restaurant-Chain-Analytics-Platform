@@ -18,9 +18,10 @@ last_updated TIMESTAMP
 def orders():
 
   # Event Hubs configuration — read inside function to comply with Serverless spark.conf restrictions
-  EH_NAMESPACE = dbutils.secrets.get(scope='restaurantproject', key='EVENTHUB_NAMESPACE') 	
-  EH_NAME      = dbutils.secrets.get(scope='restaurantproject', key='EVENTHUB_NAME') 	
-  EH_CONN_STR  = dbutils.secrets.get(scope='restaurantproject', key='EVENTHUB_CONN_STR') 	
+  SECRET_SCOPE = spark.conf.get("secret_scope")  # set from ${var.secret_scope} in the pipeline configuration
+  EH_NAMESPACE = dbutils.secrets.get(scope=SECRET_SCOPE, key='EVENTHUB_NAMESPACE') 	
+  EH_NAME      = dbutils.secrets.get(scope=SECRET_SCOPE, key='EVENTHUB_NAME') 	
+  EH_CONN_STR  = dbutils.secrets.get(scope=SECRET_SCOPE, key='EVENTHUB_CONN_STR') 	
 
   # Kafka Consumer configuration
   KAFKA_OPTIONS = {
@@ -33,7 +34,7 @@ def orders():
     "kafka.session.timeout.ms" : "30000",         # Maximum time to wait for a group to rebalance i.e. 30 seconds
     "maxOffsetsPerTrigger"     : "50000",         # Maximum number of records to read from Kafka in each micro-batch
     "failOnDataLoss"           : "false",         # Continue processing if Event Hubs retention window expires
-    "startingOffsets"          : "latest"         # Earliest offset to start reading from Event Hubs
+    "startingOffsets"          : "latest"         # On first start, read only new events (ignored once a checkpoint exists)
   }
 
   df_raw = spark.readStream.format("kafka").options(**KAFKA_OPTIONS).load()
@@ -42,6 +43,5 @@ def orders():
     .withColumn("value_str", col("value").cast("string"))
     .withColumn("value_parsed", from_json(col("value_str"), schema))
     .select("value_parsed.*")
-    .withColumnRenamed("timestamp", "order_timestamp")
   )
   return df_parsed

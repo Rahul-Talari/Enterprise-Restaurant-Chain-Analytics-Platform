@@ -7,7 +7,11 @@ resources:
       schema: ${var.silver_schema}
 
       serverless: true
-      continuous: true
+      continuous: false  # triggered: master_job runs it hourly; a continuous pipeline never finishes, which blocks downstream tasks
+
+      configuration:
+        catalog: ${var.catalog}
+        bronze_schema: ${var.bronze_schema}
 
       libraries:
         - file:

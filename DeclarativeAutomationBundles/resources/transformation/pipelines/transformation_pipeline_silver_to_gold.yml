@@ -8,6 +8,11 @@ resources:
 
       serverless: true
 
+      configuration:
+        catalog: ${var.catalog}
+        silver_schema: ${var.silver_schema}
+        governance_schema: ${var.governance_schema}
+
       libraries:
         - file:
             path: ../../../sources/3.transformation_pipeline_silver_to_gold/transformations/daily_customer_360.py

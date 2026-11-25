@@ -1,0 +1,9 @@
+resources:
+  dashboards:
+    restaurant_chain_analytics:
+      display_name: Restaurant Chain Analytics
+      file_path: ../../sources/4_Dashboards/Restaurant_Chain_Analytics.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      # Queries use schema-qualified names (`02_silver`.x / `03_gold`.x);
+      # the catalog is supplied here so dev and prod read their own data.
+      dataset_catalog: ${var.catalog}

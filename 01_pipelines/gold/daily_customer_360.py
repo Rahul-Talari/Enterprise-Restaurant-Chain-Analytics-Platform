@@ -2,6 +2,9 @@ from pyspark import pipelines as dp
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 
+CATALOG = spark.conf.get("catalog")
+SILVER_SCHEMA = spark.conf.get("silver_schema")
+
 
 @dp.materialized_view(
     name="daily_customer_360",
@@ -13,12 +16,12 @@ def daily_customer_360():
     # Read Silver Tables
     # -------------------------
 
-    customers_src = spark.read.table("databricksproject_ws.`02_silver`.dim_customers")
-    restaurants_src = spark.read.table("databricksproject_ws.`02_silver`.dim_restaurants")
-    menu_items_src = spark.read.table("databricksproject_ws.`02_silver`.dim_menu_items")
-    orders_src = spark.read.table("databricksproject_ws.`02_silver`.fact_orders")
-    order_items_src = spark.read.table("databricksproject_ws.`02_silver`.fact_order_items")
-    reviews_src = spark.read.table("databricksproject_ws.`02_silver`.fact_reviews")
+    customers_src = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.dim_customers")
+    restaurants_src = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.dim_restaurants")
+    menu_items_src = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.dim_menu_items")
+    orders_src = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.fact_orders")
+    order_items_src = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.fact_order_items")
+    reviews_src = spark.read.table(f"{CATALOG}.`{SILVER_SCHEMA}`.fact_reviews")
 
     # -------------------------
     # Current Dimension Records

@@ -5,6 +5,7 @@ include:
   - resources/ingestion/**/*.yml
   - resources/transformation/**/*.yml
   - resources/orchestration/**/*.yml
+  - resources/dashboards/**/*.yml
   - config/**/*.yml
 
 variables:
@@ -26,7 +27,7 @@ variables:
 
   failure_email:
     description: Failure notification email
-    default: talarirahulamnaidatta@gmail.com
+    default: talarirahulmanidatta@gmail.com
 
   secret_scope:
     description: Secret scope
@@ -44,6 +45,35 @@ variables:
     description: Source SQL Schema
     default: dbo
 
+  governance_schema:
+    description: Schema for access-control functions and the restaurant_access mapping
+    default: 04_governance
+
+  secure_schema:
+    description: Schema for restaurant-scoped, PII-masked dynamic views
+    default: 05_secure
+
+  owners_group:
+    description: Account group with enterprise-wide, unmasked access
+    default: restaurant_owners
+
+  analysts_group:
+    description: Account group with restaurant-scoped, PII-masked access
+    default: restaurant_analysts
+
+  engineers_group:
+    description: Account group that builds and operates the pipelines
+    default: data_engineers
+
+  dq_alert_threshold:
+    description: The dq_alert task fails when more rows than this are quarantined in one run
+    default: 0
+
+  warehouse_id:
+    description: SQL warehouse that runs the AI/BI dashboard queries
+    lookup:
+      warehouse: Serverless Starter Warehouse
+
 targets:
   dev:
     mode: development
@@ -51,7 +81,6 @@ targets:
 
     workspace:
       host: https://adb-7405609208650840.0.azuredatabricks.net
-      profile: DEFAULT
 
     variables:
       catalog: databricksproject_ws
@@ -61,7 +90,6 @@ targets:
 
     workspace:
       host: https://adb-7405609208650840.0.azuredatabricks.net
-      profile: DEFAULT
 
     variables:
       catalog: databricksproject_ws_prod

@@ -1,23 +1,26 @@
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col
 
+CATALOG = spark.conf.get("catalog")
+BRONZE_SCHEMA = spark.conf.get("bronze_schema")
+
 # =====================================================
 # Bronze Streaming Views
 # =====================================================
 
 @dp.view
 def restaurants_stream():
-    return spark.readStream.table("databricksproject_ws.`01_bronze`.restaurants")
+    return spark.readStream.table(f"{CATALOG}.`{BRONZE_SCHEMA}`.restaurants")
 
 
 @dp.view
 def customers_stream():
-    return spark.readStream.table("databricksproject_ws.`01_bronze`.customers")
+    return spark.readStream.table(f"{CATALOG}.`{BRONZE_SCHEMA}`.customers")
 
 
 @dp.view
 def menu_items_stream():
-    return spark.readStream.table("databricksproject_ws.`01_bronze`.menu_items")
+    return spark.readStream.table(f"{CATALOG}.`{BRONZE_SCHEMA}`.menu_items")
 
 
 # =====================================================
