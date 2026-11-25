@@ -1,19 +1,47 @@
-# Enterprise Restaurant Chain Analytics Lakehouse Platform
+<div align="center">
 
-An end-to-end **Azure Databricks Lakehouse** for a restaurant chain. It combines historical data from **Azure SQL Database** with live orders from **Azure Event Hubs**, processes them through **Bronze → Silver → Gold** layers, and serves dashboards, Genie and governed KPIs.
+# 🍽️ Enterprise Restaurant Chain Analytics Lakehouse Platform
 
-**Highlights:**
-- Batch and streaming ingestion
-- Kimball galaxy schema with SCD Type 2 dimensions
-- Data-quality quarantine and alerts
-- LLM review analysis
-- Metric views
-- Unity Catalog governance
-- Deployment as code with GitHub Actions CI/CD
+**End-to-end Azure Databricks Lakehouse: batch + streaming ingestion, Medallion architecture, governed analytics**
+
+![Azure](https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
+![Databricks](https://img.shields.io/badge/Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/Apache_Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
+![Delta Lake](https://img.shields.io/badge/Delta_Lake-00ADD4?style=for-the-badge&logo=delta&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![SQL](https://img.shields.io/badge/SQL-4479A1?style=for-the-badge)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+
+[Architecture](#architecture) •
+[Data modeling](#data-modeling) •
+[Medallion](#medallion) •
+[Governance](#governance) •
+[Dashboards](#dashboards) •
+[Getting started](#getting-started)
+
+</div>
 
 ---
 
-## Architecture
+## 📌 Overview
+
+An end-to-end **Azure Databricks Lakehouse** for a restaurant chain. It combines historical data from **Azure SQL Database** with live orders from **Azure Event Hubs**, processes them through **Bronze → Silver → Gold** layers, and serves dashboards, Genie and governed KPIs.
+
+| | Highlights |
+|---|---|
+| ⚡ | Batch and streaming ingestion |
+| 🧱 | Kimball galaxy schema with SCD Type 2 dimensions |
+| ✅ | Data-quality quarantine and alerts |
+| 🤖 | LLM review analysis |
+| 📊 | Metric views with shared KPI definitions |
+| 🔐 | Unity Catalog governance |
+| 🚀 | Deployment as code with GitHub Actions CI/CD |
+
+---
+
+<a id="architecture"></a>
+
+## 🏗️ Architecture
 
 <p align="center">
   <img src="./diagrams/8_project architecture.png" width="100%">
@@ -26,7 +54,7 @@ An end-to-end **Azure Databricks Lakehouse** for a restaurant chain. It combines
 
 ---
 
-## Technology stack
+## 🧰 Technology stack
 
 | Area | Technology |
 |---|---|
@@ -44,7 +72,9 @@ An end-to-end **Azure Databricks Lakehouse** for a restaurant chain. It combines
 
 ---
 
-## Data modeling
+<a id="data-modeling"></a>
+
+## 🧩 Data modeling
 
 The model was designed in four steps, from business process to analytical schema.
 
@@ -80,7 +110,9 @@ The model was designed in four steps, from business process to analytical schema
 
 ---
 
-## Medallion architecture
+<a id="medallion"></a>
+
+## 🥉🥈🥇 Medallion architecture
 
 | Layer | Schema | What it does |
 |---|---|---|
@@ -88,11 +120,12 @@ The model was designed in four steps, from business process to analytical schema
 | **Silver** | `02_silver` | Cleans and validates data, keeps dimension history (SCD2), merges historical and live orders, analyzes reviews with an LLM |
 | **Gold** | `03_gold` | `d_sales_summary` (daily KPIs), `daily_customer_360` (customer profiles), `d_restaurant_reviews` (review analytics), plus metric views |
 
-**AI review analysis:** for each review, an LLM returns the sentiment and flags issues with delivery, food quality, pricing or portion size.
+> [!NOTE]
+> **AI review analysis:** for each review, an LLM returns the sentiment and flags issues with delivery, food quality, pricing or portion size.
 
 ---
 
-## Data quality
+## ✅ Data quality
 
 - **Rules:** every order and order item is checked against rules such as required keys, positive amounts and valid status.
 - **Only valid rows reach the fact tables.**
@@ -101,7 +134,7 @@ The model was designed in four steps, from business process to analytical schema
 
 ---
 
-## Semantic layer
+## 📊 Semantic layer
 
 Unity Catalog **metric views** define each KPI once. Dashboards, Genie and SQL then all calculate it the same way.
 
@@ -119,7 +152,9 @@ GROUP BY restaurant_name;
 
 ---
 
-## Governance and security
+<a id="governance"></a>
+
+## 🔐 Governance and security
 
 | Role | Sees |
 |---|---|
@@ -138,7 +173,7 @@ GROUP BY restaurant_name;
 
 ---
 
-## Orchestration and CI/CD
+## 🔄 Orchestration and CI/CD
 
 **Hourly job (`master_job`):**
 
@@ -154,7 +189,9 @@ Each run processes only new data, and a failure sends an email.
 
 ---
 
-## Dashboards
+<a id="dashboards"></a>
+
+## 📈 Dashboards
 
 **Chain performance:** revenue, orders, average order value, customer growth, top items and weekday trends.
 
@@ -174,7 +211,7 @@ Each run processes only new data, and a failure sends an email.
 
 ---
 
-## Repository structure
+## 📁 Repository structure
 
 ```text
 ├── .github/workflows/              # CI/CD
@@ -190,7 +227,12 @@ Each run processes only new data, and a failure sends an email.
 
 ---
 
-## Getting started
+<a id="getting-started"></a>
+
+## 🚀 Getting started
+
+> [!IMPORTANT]
+> Complete the one-time workspace setup in [`prerequisites.md`](./DeclarativeAutomationBundles/prerequisites.md) first: SQL connection, secret scope, catalog, access groups and the `pii` tag.
 
 ```bash
 # 1. Generate sample data (8,000 orders over 6 months) and load it into Azure SQL
@@ -201,8 +243,6 @@ python 03_run.py
 # 2. Optional: stream live orders (needs EVENTHUB_CONNECTION_STRING and EVENTHUB_NAME in .env)
 python 04_eventhub_orders.py
 
-# 3. One-time workspace setup: see DeclarativeAutomationBundles/prerequisites.md
-
 # 4. Deploy and run
 cd ../../DeclarativeAutomationBundles
 databricks bundle deploy --target dev
@@ -211,7 +251,13 @@ databricks bundle run master_job --target dev
 
 ---
 
-## Contributors
+## 👥 Contributors
 
-- **Rahul Talari**
-- **Parimala Sri Sikhakolli**
+| **Rahul Talari** | **Parimala Sri Sikhakolli** |
+|:---:|:---:|
+
+<div align="center">
+
+⭐ If you find this project useful, consider giving it a star.
+
+</div>
